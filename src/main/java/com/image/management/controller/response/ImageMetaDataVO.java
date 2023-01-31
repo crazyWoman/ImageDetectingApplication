@@ -8,6 +8,7 @@ import java.util.List;
 @Setter
 public class ImageMetaDataVO {
     private Long metaDataId;
+    private Long imageID;
     private String mid;
     private String name;
     private float objectScore;

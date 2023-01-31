@@ -18,12 +18,11 @@ public interface ImageMapper {
   ImageMetaData localizedObjectAnnotationToImageMetaData(
       LocalizedObjectAnnotation localizedObjectAnnotation);
 
-    List<ImageMetaData> localizedObjectAnnotationListToImageMetaDataList(List<LocalizedObjectAnnotation> localizedObjectAnnotations);
+  List<ImageMetaData> localizedObjectAnnotationListToImageMetaDataList(
+      List<LocalizedObjectAnnotation> localizedObjectAnnotations);
 
-
-    @Mapping(source = "x", target = "XCoordinate")
-    @Mapping(source = "y", target = "YCoordinate")
-    com.image.management.model.NormalizedVertex normalizedVertexToModelNormalizedVertices(com.google.cloud.vision.v1.NormalizedVertex normalizedVertex);
-
-
+  @Mapping(source = "x", target = "XCoordinate")
+  @Mapping(source = "y", target = "YCoordinate")
+  com.image.management.model.NormalizedVertex normalizedVertexToModelNormalizedVertices(
+      com.google.cloud.vision.v1.NormalizedVertex normalizedVertex);
 }

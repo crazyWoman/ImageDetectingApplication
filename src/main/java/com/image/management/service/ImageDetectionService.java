@@ -5,17 +5,21 @@ import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
 import com.image.management.controller.request.ImageDetectionRequest;
 import com.image.management.controller.response.ImageDataVO;
+import com.image.management.controller.response.ImageMetaDataVO;
 import com.image.management.exception.NotFoundException;
 import com.image.management.mapper.ImageMapper;
 import com.image.management.mapper.ImageVOMapper;
 import com.image.management.model.Image;
 import com.image.management.model.ImageMetaData;
+import com.image.management.repository.ImageMetaDataRepository;
 import com.image.management.repository.ImageRepository;
 import org.mapstruct.factory.Mappers;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,17 +31,19 @@ public class ImageDetectionService {
   private final CloudVisionTemplate cloudVisionTemplate;
 
   private final ImageRepository imageRepository;
+  private final ImageMetaDataRepository imageMetaDataRepository;
 
   private final ImageMapper imageMapper = Mappers.getMapper(ImageMapper.class);
   private final ImageVOMapper imageVOMapper = Mappers.getMapper(ImageVOMapper.class);
 
   public ImageDetectionService(
-      ResourceLoader resourceLoader,
-      CloudVisionTemplate cloudVisionTemplate,
-      ImageRepository imageRepository) {
+          ResourceLoader resourceLoader,
+          CloudVisionTemplate cloudVisionTemplate,
+          ImageRepository imageRepository, ImageMetaDataRepository imageMetaDataRepository) {
     this.resourceLoader = resourceLoader;
     this.cloudVisionTemplate = cloudVisionTemplate;
     this.imageRepository = imageRepository;
+    this.imageMetaDataRepository = imageMetaDataRepository;
   }
 
   public ImageDataVO saveImage(final ImageDetectionRequest imageDetectionRequest) {
@@ -54,36 +60,63 @@ public class ImageDetectionService {
     return imageVOMapper.mapImageToImageVO(imageRepository.findImageByImageID(image1.getImageID()));
   }
 
-  public ImageDataVO fetchImage(final Integer imageId) {
-   return  Optional.ofNullable(imageRepository.findImageByImageID(imageId))
-            .map(image -> imageVOMapper.mapImageToImageVO(image))
-            .orElse(null);
-
+  public List<ImageMetaDataVO> fetchImage(final Integer imageId) {
+    return Optional.ofNullable(imageRepository.findImageByImageID(imageId))
+        .map(
+            image ->
+                imageVOMapper.mapImageMetaDataLstToImageMetaDataVOLst(image.getImageMetaData()))
+        .orElse(null);
   }
 
-  public List<ImageDataVO> fetchAllImages() {
-    return Optional.ofNullable(imageRepository.findAll()).stream()
-        .flatMap(images -> images.stream().map(imageVOMapper::mapImageToImageVO))
-        .collect(Collectors.toList());
-  }
-
-  public List<ImageDataVO> fetchAllImagesForSpecificMetaData(List<String> names) {
-    return Optional.ofNullable(imageRepository.findImagesByObjectsList(names)).stream()
-            .flatMap(images -> images.stream().map(imageVOMapper::mapImageToImageVO))
+  public List<ImageMetaDataVO> fetchAllImages() {
+    List<ImageMetaData> metaDataList =
+        Optional.ofNullable(imageRepository.findAll()).stream()
+            .flatMap(Collection::stream)
+            .map(Image::getImageMetaData)
+            .flatMap(Collection::stream)
             .collect(Collectors.toList());
+    return Optional.of(metaDataList)
+        .map(imageVOMapper::mapImageMetaDataLstToImageMetaDataVOLst)
+        .orElse(null);
+  }
+
+  public List<ImageMetaDataVO> fetchAllImagesForSpecificMetaData(List<String> names) {
+    List<ImageMetaData> metaDataList =
+        Optional.ofNullable(imageRepository.findImagesByObjectsList(names)).stream()
+            .flatMap(Collection::stream)
+            .map(Image::getImageMetaData)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    return Optional.of(metaDataList)
+        .map(imageVOMapper::mapImageMetaDataLstToImageMetaDataVOLst)
+        .orElse(null);
+  }
+
+  public List<ImageMetaDataVO> fetchAllMetaDataForSpecificNames(List<String> names) {
+    List<ImageMetaData> metaDataList =
+            Optional.ofNullable(imageMetaDataRepository.findImageMetaDataByNames(names)).stream()
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+    return Optional.of(metaDataList)
+            .map(imageVOMapper::mapImageMetaDataLstToImageMetaDataVOLst)
+            .orElse(null);
   }
 
   public byte[] extractTheImage(ImageDetectionRequest imageDetectionRequest) {
 
     return Optional.ofNullable(imageDetectionRequest)
         .map(ImageDetectionRequest::getImageURL)
-        .map(url -> resourceLoader.getResource(url))
+            .map(resourceLoader::getResource)
         .map(
             resource -> {
               try {
                 return resource.getInputStream();
-              } catch (IOException e) {
-                throw new RuntimeException(e);
+              } catch (FileNotFoundException e) {
+                throw  new NotFoundException(
+                        "File not found ");
+              }catch (IOException e) {
+                throw  new NotFoundException(
+                        "Unable to read your file");
               }
             })
         .map(
@@ -91,7 +124,8 @@ public class ImageDetectionService {
               try {
                 return inputStream.readAllBytes();
               } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw  new NotFoundException(
+                        "Unable to read the file");
               }
             })
         .orElseThrow(

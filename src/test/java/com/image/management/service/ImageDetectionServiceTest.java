@@ -31,7 +31,7 @@ class ImageDetectionServiceTest {
   public void willSaveTheImage() {
     ImageDetectionRequest request = new ImageDetectionRequest();
     @NotEmpty String ClassPath;
-    request.setImageURL( "classpath:/images/livingroom.png");
+    request.setImageURL( "c:/ClientHealth/living.PNG");
     request.setImageLabel("room");
     sut.saveImage(request);
     Assertions.assertThrows(NotFoundException.class, () -> sut.extractTheImage(request));
