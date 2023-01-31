@@ -6,8 +6,7 @@ import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
 import com.image.management.controller.request.ImageDetectionRequest;
 import com.image.management.controller.response.ImageDataVO;
 import com.image.management.controller.response.ImageMetaDataVO;
-import com.image.management.exception.ExceptionConstants;
-import com.image.management.exception.ImageProcessingException;
+import com.image.management.exception.*;
 import com.image.management.mapper.ImageMapper;
 import com.image.management.mapper.ImageVOMapper;
 import com.image.management.model.Image;
@@ -63,6 +62,16 @@ public class ImageDetectionService {
     return imageVOMapper.mapImageToImageVO(imageRepository.findImageByImageID(image1.getImageID()));
   }
 
+  public ImageDataVO saveOnlyImage(final ImageDetectionRequest imageDetectionRequest) {
+    Image image = new Image();
+    final byte[] fileContent = extractTheImage(imageDetectionRequest);
+    image.setImageData(fileContent);
+    image.setImageLabel(imageDetectionRequest.getImageLabel());
+    image.setImageMetaData(null);
+    Image image1 = imageRepository.save(image);
+    return imageVOMapper.mapImageToImageVO(imageRepository.findImageByImageID(image1.getImageID()));
+  }
+
   public List<ImageMetaDataVO> fetchImage(final Integer imageId) {
     return Optional.ofNullable(imageRepository.findImageByImageID(imageId))
         .map(
@@ -114,16 +123,8 @@ public class ImageDetectionService {
             resource -> {
               try {
                 return resource.getInputStream();
-              } catch (FileNotFoundException e) {
-                throw new ImageProcessingException(
-                    ExceptionConstants.REQUEST_ISSUE,
-                    HttpStatus.NOT_FOUND,
-                    List.of("File Not Found, Please check the location specified"));
               } catch (IOException e) {
-                throw new ImageProcessingException(
-                    ExceptionConstants.REQUEST_ISSUE,
-                    HttpStatus.NOT_FOUND,
-                    List.of("Unable to read the file"));
+                throw new ImageFileException();
               }
             })
         .map(
@@ -131,18 +132,10 @@ public class ImageDetectionService {
               try {
                 return inputStream.readAllBytes();
               } catch (IOException e) {
-                throw new ImageProcessingException(
-                    ExceptionConstants.REQUEST_ISSUE,
-                    HttpStatus.NOT_FOUND,
-                    List.of("Unable to read the file"));
+                throw new ImageReadingException();
               }
             })
-        .orElseThrow(
-            () ->
-                new ImageProcessingException(
-                    ExceptionConstants.REQUEST_ISSUE,
-                    HttpStatus.NOT_FOUND,
-                    List.of("URL is missing")));
+        .orElseThrow(URLMissingException::new);
   }
 
   public List<LocalizedObjectAnnotation> getLocalizedObjectAnnotation(

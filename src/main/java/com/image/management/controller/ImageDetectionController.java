@@ -3,8 +3,7 @@ package com.image.management.controller;
 import com.image.management.controller.request.ImageDetectionRequest;
 import com.image.management.controller.response.ImageDataVO;
 import com.image.management.controller.response.ImageMetaDataVO;
-import com.image.management.exception.ExceptionConstants;
-import com.image.management.exception.ImageProcessingException;
+import com.image.management.exception.ImageNotFoundException;
 import com.image.management.service.ImageDetectionService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.HttpStatus;
@@ -32,14 +31,7 @@ public class ImageDetectionController {
         Optional.ofNullable(imageDetectionRequest)
             .filter(ImageDetectionRequest::isObjectProcessing)
             .map(imageDetectionService::saveImage)
-            .orElseThrow(
-                () ->
-                    new ImageProcessingException(
-                        ExceptionConstants.REQUEST_JSON,
-                        HttpStatus.OK,
-                        List.of(
-                            "User requested not to process the request by setting false value to objectProcessing")));
-
+            .orElse(imageDetectionService.saveOnlyImage(imageDetectionRequest));
     return new ResponseEntity<>(image, HttpStatus.OK);
   }
 
@@ -48,13 +40,7 @@ public class ImageDetectionController {
   public @ResponseBody ResponseEntity<List<ImageMetaDataVO>> findImageById(
       @PathVariable Integer imageId) {
     List<ImageMetaDataVO> imageMetaDatalist = imageDetectionService.fetchImage(imageId);
-    Optional.ofNullable(imageMetaDatalist)
-        .orElseThrow(
-            () ->
-                new ImageProcessingException(
-                    ExceptionConstants.REQUEST_JSON,
-                    HttpStatus.OK,
-                    List.of("No data find for this image Id")));
+    Optional.ofNullable(imageMetaDatalist).orElseThrow(ImageNotFoundException::new);
     return new ResponseEntity<>(imageMetaDatalist, HttpStatus.OK);
   }
 
@@ -70,12 +56,8 @@ public class ImageDetectionController {
             .map(imageDetectionService::fetchAllMetaDataForSpecificNames)
             .orElse(imageDetectionService.fetchAllImages());
     Optional.ofNullable(images)
-        .orElseThrow(
-            () ->
-                new ImageProcessingException(
-                    ExceptionConstants.REQUEST_JSON,
-                    HttpStatus.OK,
-                    List.of("No data find for these objects")));
+        .filter(imageMetaDataVOS -> imageMetaDataVOS.size() > 0)
+        .orElseThrow(ImageNotFoundException::new);
     return new ResponseEntity<>(images, HttpStatus.OK);
   }
 }
