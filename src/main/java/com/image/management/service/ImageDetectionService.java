@@ -15,10 +15,10 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ImageDetectionService {
@@ -28,30 +28,49 @@ public class ImageDetectionService {
 
   private final ImageRepository imageRepository;
 
-private  final ImageMetaDataMapper imageMetaDataMapper;
+  private final ImageMapper imageMapper = Mappers.getMapper(ImageMapper.class);
+  private final ImageVOMapper imageVOMapper = Mappers.getMapper(ImageVOMapper.class);
 
-private final ImageMapper imageMapper = Mappers.getMapper(ImageMapper.class);
-private final ImageVOMapper imageVOMapper = Mappers.getMapper(ImageVOMapper.class);
-
-
-  public ImageDetectionService(ResourceLoader resourceLoader, CloudVisionTemplate cloudVisionTemplate, ImageRepository imageRepository, ImageMetaDataMapper imageMetaDataMapper) {
+  public ImageDetectionService(
+      ResourceLoader resourceLoader,
+      CloudVisionTemplate cloudVisionTemplate,
+      ImageRepository imageRepository) {
     this.resourceLoader = resourceLoader;
     this.cloudVisionTemplate = cloudVisionTemplate;
-      this.imageRepository = imageRepository;
-      this.imageMetaDataMapper = imageMetaDataMapper;
-
+    this.imageRepository = imageRepository;
   }
 
   public ImageDataVO saveImage(final ImageDetectionRequest imageDetectionRequest) {
-     Image image = new Image();
+    Image image = new Image();
     final byte[] fileContent = extractTheImage(imageDetectionRequest);
-    final List<LocalizedObjectAnnotation>  annotations = getLocalizedObjectAnnotation(imageDetectionRequest);
-    List<ImageMetaData> imageMetaData =  imageMapper.localizedObjectAnnotationListToImageMetaDataList(annotations);
-      image.setImageData(fileContent);
-      image.setImageLabel(imageDetectionRequest.getImageLabel());
-      image.setImageMetaData(imageMetaData);
-      imageRepository.save(image);
-      return imageVOMapper.mapImageToImageVO(imageRepository.findImagesWithMetaData());
+    final List<LocalizedObjectAnnotation> annotations =
+        getLocalizedObjectAnnotation(imageDetectionRequest);
+    List<ImageMetaData> imageMetaData =
+        imageMapper.localizedObjectAnnotationListToImageMetaDataList(annotations);
+    image.setImageData(fileContent);
+    image.setImageLabel(imageDetectionRequest.getImageLabel());
+    image.setImageMetaData(imageMetaData);
+    Image image1 = imageRepository.save(image);
+    return imageVOMapper.mapImageToImageVO(imageRepository.findImageByImageID(image1.getImageID()));
+  }
+
+  public ImageDataVO fetchImage(final Integer imageId) {
+   return  Optional.ofNullable(imageRepository.findImageByImageID(imageId))
+            .map(image -> imageVOMapper.mapImageToImageVO(image))
+            .orElse(null);
+
+  }
+
+  public List<ImageDataVO> fetchAllImages() {
+    return Optional.ofNullable(imageRepository.findAll()).stream()
+        .flatMap(images -> images.stream().map(imageVOMapper::mapImageToImageVO))
+        .collect(Collectors.toList());
+  }
+
+  public List<ImageDataVO> fetchAllImagesForSpecificMetaData(List<String> names) {
+    return Optional.ofNullable(imageRepository.findImagesByObjectsList(names)).stream()
+            .flatMap(images -> images.stream().map(imageVOMapper::mapImageToImageVO))
+            .collect(Collectors.toList());
   }
 
   public byte[] extractTheImage(ImageDetectionRequest imageDetectionRequest) {
@@ -81,12 +100,12 @@ private final ImageVOMapper imageVOMapper = Mappers.getMapper(ImageVOMapper.clas
                     "Not able extract the image content. File or imageURL is null  "));
   }
 
-  public List<LocalizedObjectAnnotation> getLocalizedObjectAnnotation(final ImageDetectionRequest imageDetectionRequest) {
-    return
-        cloudVisionTemplate
-            .analyzeImage(
-                resourceLoader.getResource(imageDetectionRequest.getImageURL()),
-                Feature.Type.OBJECT_LOCALIZATION)
-            .getLocalizedObjectAnnotationsList();
+  public List<LocalizedObjectAnnotation> getLocalizedObjectAnnotation(
+      final ImageDetectionRequest imageDetectionRequest) {
+    return cloudVisionTemplate
+        .analyzeImage(
+            resourceLoader.getResource(imageDetectionRequest.getImageURL()),
+            Feature.Type.OBJECT_LOCALIZATION)
+        .getLocalizedObjectAnnotationsList();
   }
 }
