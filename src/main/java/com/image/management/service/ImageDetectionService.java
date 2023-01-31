@@ -6,7 +6,8 @@ import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
 import com.image.management.controller.request.ImageDetectionRequest;
 import com.image.management.controller.response.ImageDataVO;
 import com.image.management.controller.response.ImageMetaDataVO;
-import com.image.management.exception.NotFoundException;
+import com.image.management.exception.ExceptionConstants;
+import com.image.management.exception.ImageProcessingException;
 import com.image.management.mapper.ImageMapper;
 import com.image.management.mapper.ImageVOMapper;
 import com.image.management.model.Image;
@@ -15,6 +16,7 @@ import com.image.management.repository.ImageMetaDataRepository;
 import com.image.management.repository.ImageRepository;
 import org.mapstruct.factory.Mappers;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
@@ -37,9 +39,10 @@ public class ImageDetectionService {
   private final ImageVOMapper imageVOMapper = Mappers.getMapper(ImageVOMapper.class);
 
   public ImageDetectionService(
-          ResourceLoader resourceLoader,
-          CloudVisionTemplate cloudVisionTemplate,
-          ImageRepository imageRepository, ImageMetaDataRepository imageMetaDataRepository) {
+      ResourceLoader resourceLoader,
+      CloudVisionTemplate cloudVisionTemplate,
+      ImageRepository imageRepository,
+      ImageMetaDataRepository imageMetaDataRepository) {
     this.resourceLoader = resourceLoader;
     this.cloudVisionTemplate = cloudVisionTemplate;
     this.imageRepository = imageRepository;
@@ -94,29 +97,33 @@ public class ImageDetectionService {
 
   public List<ImageMetaDataVO> fetchAllMetaDataForSpecificNames(List<String> names) {
     List<ImageMetaData> metaDataList =
-            Optional.ofNullable(imageMetaDataRepository.findImageMetaDataByNames(names)).stream()
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList());
+        Optional.ofNullable(imageMetaDataRepository.findImageMetaDataByNames(names)).stream()
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
     return Optional.of(metaDataList)
-            .map(imageVOMapper::mapImageMetaDataLstToImageMetaDataVOLst)
-            .orElse(null);
+        .map(imageVOMapper::mapImageMetaDataLstToImageMetaDataVOLst)
+        .orElse(null);
   }
 
   public byte[] extractTheImage(ImageDetectionRequest imageDetectionRequest) {
 
     return Optional.ofNullable(imageDetectionRequest)
         .map(ImageDetectionRequest::getImageURL)
-            .map(resourceLoader::getResource)
+        .map(resourceLoader::getResource)
         .map(
             resource -> {
               try {
                 return resource.getInputStream();
               } catch (FileNotFoundException e) {
-                throw  new NotFoundException(
-                        "File not found ");
-              }catch (IOException e) {
-                throw  new NotFoundException(
-                        "Unable to read your file");
+                throw new ImageProcessingException(
+                    ExceptionConstants.REQUEST_ISSUE,
+                    HttpStatus.NOT_FOUND,
+                    List.of("File Not Found, Please check the location specified"));
+              } catch (IOException e) {
+                throw new ImageProcessingException(
+                    ExceptionConstants.REQUEST_ISSUE,
+                    HttpStatus.NOT_FOUND,
+                    List.of("Unable to read the file"));
               }
             })
         .map(
@@ -124,14 +131,18 @@ public class ImageDetectionService {
               try {
                 return inputStream.readAllBytes();
               } catch (IOException e) {
-                throw  new NotFoundException(
-                        "Unable to read the file");
+                throw new ImageProcessingException(
+                    ExceptionConstants.REQUEST_ISSUE,
+                    HttpStatus.NOT_FOUND,
+                    List.of("Unable to read the file"));
               }
             })
         .orElseThrow(
             () ->
-                new NotFoundException(
-                    "Not able extract the image content. File or imageURL is null  "));
+                new ImageProcessingException(
+                    ExceptionConstants.REQUEST_ISSUE,
+                    HttpStatus.NOT_FOUND,
+                    List.of("URL is missing")));
   }
 
   public List<LocalizedObjectAnnotation> getLocalizedObjectAnnotation(

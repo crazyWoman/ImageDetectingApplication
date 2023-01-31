@@ -1,8 +1,6 @@
 package com.image.management.mapper;
 
-import com.google.cloud.vision.v1.BoundingPoly;
 import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
-
 import com.image.management.model.ImageMetaData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

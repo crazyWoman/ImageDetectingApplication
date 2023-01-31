@@ -12,6 +12,7 @@ import java.util.List;
 @Repository
 public interface ImageMetaDataRepository extends JpaRepository<ImageMetaData, Integer> {
 
-  @Query( " from ImageMetaData metadata join metadata.normalizedVertices vertices where metadata.name in :objects")
+  @Query(
+      " from ImageMetaData metadata join metadata.normalizedVertices vertices where metadata.name in :objects")
   List<ImageMetaData> findImageMetaDataByNames(@Param("objects") List<String> objects);
 }

@@ -16,11 +16,13 @@ import javax.validation.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImageDetectionRequest {
 
-    @JsonProperty("imageURL")
-    @NotEmpty
-    private String imageURL;
-    @JsonProperty("imageLabel")
-    private String imageLabel;
-    @JsonProperty("objectProcessing")
-    private boolean objectProcessing;
+  @JsonProperty("imageURL")
+  @NotEmpty
+  private String imageURL;
+
+  @JsonProperty("imageLabel")
+  private String imageLabel;
+
+  @JsonProperty("objectProcessing")
+  private boolean objectProcessing;
 }
