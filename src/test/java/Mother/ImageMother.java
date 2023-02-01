@@ -9,6 +9,7 @@ public class ImageMother implements Builder<Image> {
 
   private Integer imageID;
 
+
   private String imageLabel;
 
     ImageMetadataMother imageMetadataMother = new ImageMetadataMother();
@@ -17,6 +18,7 @@ public class ImageMother implements Builder<Image> {
         this.imageID = imageID;
         return this;
     }
+
 
     public ImageMother setImageLabel(String imageLabel) {
         this.imageLabel = imageLabel;
@@ -34,6 +36,7 @@ public class ImageMother implements Builder<Image> {
         image.setImageMetaData(List.of(imageMetadataMother.build()));
         image.setImageLabel(this.imageLabel);
         image.setImageID(this.imageID);
-    return null;
+
+    return image;
   }
 }
