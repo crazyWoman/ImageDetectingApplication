@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.tuple;
         @Sql("/test-insert.sql")
 })
 
-public class ImageRepositoryTest {
+public class ImageRepositoryIntegrationTest {
 
     @Autowired
     private ImageRepository imageRepository;
