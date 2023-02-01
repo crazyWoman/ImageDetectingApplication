@@ -8,12 +8,12 @@ public class NormalizedVertexMother implements Builder<NormalizedVertex> {
 
   private float yCoordinate;
 
-  public NormalizedVertexMother setxCoordinate(float xCoordinate) {
+  public NormalizedVertexMother setXCoordinate(float xCoordinate) {
     this.xCoordinate = xCoordinate;
     return this;
   }
 
-  public NormalizedVertexMother setyCoordinate(float yCoordinate) {
+  public NormalizedVertexMother setYCoordinate(float yCoordinate) {
     this.yCoordinate = yCoordinate;
     return this;
   }

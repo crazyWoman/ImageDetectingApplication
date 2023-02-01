@@ -80,7 +80,7 @@ public class ImageControllerTest {
                     .setMid("1234")
                     .setMetaDataId(2L)
                     .setNormalizedVertexMother(
-                        new NormalizedVertexMother().setyCoordinate(.30f).setxCoordinate(.25f)));
+                        new NormalizedVertexMother().setYCoordinate(.30f).setXCoordinate(.25f)));
     Image image = imageMother.build();
     ImageMetaDataVO imageDataVO =
         imageVOMapper.mapImageMetaDataToImageMetaDataVO(image.getImageMetaData().get(0));
