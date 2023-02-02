@@ -21,17 +21,24 @@ if you are using swagger then go to http://localhost:8080/swagger-ui/index.html
 
    http://localhost:8080/images 
    This is a POST method. It accepts a json with imageURL, imageLabel and objectProcessing which is default to true
+   I have images uploaded in resources/images directory. In case any one want a sample json to test
+   e.g
+   {
+   "imageURL": "classPath:images/livingroom.png",
+   "imageLabel": "living",
+   "objectProcessing": true
+   }
 
-2. Get all image metadata  endpoint
+3. Get all image metadata  endpoint
 
    http://localhost:8080/images
    This is a GET method.
 
-3. Get all image metadata for specified objects endpoint
+4. Get all image metadata for specified objects endpoint
     http://localhost:8080/images?objects=dog,cat
     This is a GET method.
 
-4. Get all image metadata for a specific image id
+5. Get all image metadata for a specific image id
    http://localhost:8080/images/1
 
  

@@ -53,7 +53,7 @@ public class ImageDetectionController {
     List<ImageMetaDataVO> images =
         Optional.ofNullable(names)
             .filter(strings -> strings.size() > 0)
-            .map(imageDetectionService::fetchAllMetaDataForSpecificNames)
+            .map(imageDetectionService::fetchAllImagesForSpecificMetaData)
             .orElse(imageDetectionService.fetchAllImages());
     Optional.ofNullable(images)
         .filter(imageMetaDataVOS -> imageMetaDataVOS.size() > 0)
