@@ -43,7 +43,8 @@ public class ImageMetadataMother implements Builder<ImageMetaData> {
     return this;
   }
 
-  public ImageMetadataMother setNormalizedVertexMother(NormalizedVertexMother normalizedVertexMother) {
+  public ImageMetadataMother setNormalizedVertexMother(
+      NormalizedVertexMother normalizedVertexMother) {
     this.normalizedVertexMother = normalizedVertexMother;
     return this;
   }

@@ -11,8 +11,16 @@ import java.util.List;
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Integer> {
 
-  @Query(" from Image image join image.imageMetaData metadata where metadata.name in :objects")
+  @Query(value = " select distinct i from Image i left join fetch i.imageMetaData m where m.name in :objects")
   List<Image> findImagesByObjectsList(@Param("objects") List<String> objects);
 
-  Image findImageByImageID(@Param("imageID") Integer imageID);
+  @Query(value = "select distinct i from Image i left join fetch i.imageMetaData m")
+  List<Image> findImageByImageID();
+
+/*  @Query(value = " from Image i left join fetch i.imageMetaData m where i.imageID = :imageId")
+  Image findImageByImageID(@Param("imageId") Integer imageId);*/
+
+
+ // @Query(" from Image image where  image.imageID = :imageId")
+  Image findImageByImageID(@Param("imageId") Integer imageId);
 }

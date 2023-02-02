@@ -1,15 +1,15 @@
 package com.image.management.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Getter
 @Setter
 @Entity
+@EqualsAndHashCode
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "TBL_NORMALIZED_VERTICES")
 public class NormalizedVertex {
   @Id
@@ -29,4 +29,13 @@ public class NormalizedVertex {
 
   @Column(name = "Y_COORDINATE")
   private float yCoordinate;
+
+ /* @ManyToOne (fetch = FetchType.LAZY)
+  @JoinColumn(name = "META_DATA_ID", nullable = false, updatable = false, insertable = false)
+  private ImageMetaData imageMetaData;*/
+
+/*  @ManyToOne()
+  @JoinColumn(name="META_DATA_ID", referencedColumnName = "META_DATA_ID", insertable = false, updatable = false)
+  private ImageMetaData imageMetaData;*/
+
 }

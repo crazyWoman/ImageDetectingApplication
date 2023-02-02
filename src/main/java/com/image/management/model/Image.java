@@ -1,15 +1,19 @@
 package com.image.management.model;
 
-import lombok.Getter;
-import lombok.Setter;
+
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.List;
 
-@Getter
-@Setter
+
 @Entity
 @Table(name = "TBL_IMAGE")
+@Getter
+@Setter
+@EqualsAndHashCode
+@AllArgsConstructor
+@NoArgsConstructor
 public class Image {
 
   @Id
@@ -28,7 +32,13 @@ public class Image {
   @Column(name = "IMAGE_LABEL")
   private String imageLabel;
 
+
+/*  @OneToMany(targetEntity=ImageMetaData.class, cascade=CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<ImageMetaData> ImageMetaData;*/
+
   @OneToMany(cascade = CascadeType.ALL)
-  @JoinColumn(name = "IMAGE_ID")
+  @JoinColumn(name="IMAGE_ID", referencedColumnName = "IMAGE_ID")
   private List<ImageMetaData> imageMetaData;
+
+
 }

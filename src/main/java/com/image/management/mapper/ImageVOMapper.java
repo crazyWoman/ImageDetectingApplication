@@ -20,7 +20,6 @@ public interface ImageVOMapper {
   ImageDataVO mapImageToImageVO(Image image);
 
   @Mapping(source = "metaDataId", target = "metaDataId")
-  @Mapping(source = "imageID", target = "imageID")
   @Mapping(source = "name", target = "name")
   @Mapping(source = "mid", target = "mid")
   @Mapping(source = "objectScore", target = "objectScore")

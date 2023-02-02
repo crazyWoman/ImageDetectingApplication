@@ -6,7 +6,9 @@ import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
 import com.image.management.controller.request.ImageDetectionRequest;
 import com.image.management.controller.response.ImageDataVO;
 import com.image.management.controller.response.ImageMetaDataVO;
-import com.image.management.exception.*;
+import com.image.management.exception.ImageFileException;
+import com.image.management.exception.ImageReadingException;
+import com.image.management.exception.URLMissingException;
 import com.image.management.mapper.ImageMapper;
 import com.image.management.mapper.ImageVOMapper;
 import com.image.management.model.Image;
@@ -15,11 +17,11 @@ import com.image.management.repository.ImageMetaDataRepository;
 import com.image.management.repository.ImageRepository;
 import org.mapstruct.factory.Mappers;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +38,8 @@ public class ImageDetectionService {
 
   private final ImageMapper imageMapper = Mappers.getMapper(ImageMapper.class);
   private final ImageVOMapper imageVOMapper = Mappers.getMapper(ImageVOMapper.class);
+
+  private static final SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 
   public ImageDetectionService(
       ResourceLoader resourceLoader,
@@ -56,11 +60,18 @@ public class ImageDetectionService {
     List<ImageMetaData> imageMetaData =
         imageMapper.localizedObjectAnnotationListToImageMetaDataList(annotations);
     image.setImageData(fileContent);
-    image.setImageLabel(imageDetectionRequest.getImageLabel());
+    image.setImageLabel(
+        imageDetectionRequest.getImageLabel() != null
+            ? imageDetectionRequest.getImageLabel()
+            : createLabel());
     image.setImageMetaData(imageMetaData);
     Image image1 = imageRepository.save(image);
     return imageVOMapper.mapImageToImageVO(imageRepository.findImageByImageID(image1.getImageID()));
   }
+
+   public String createLabel(){
+     return "image_" + sdf1.format(new Timestamp(System.currentTimeMillis()));
+   }
 
   public ImageDataVO saveOnlyImage(final ImageDetectionRequest imageDetectionRequest) {
     Image image = new Image();
