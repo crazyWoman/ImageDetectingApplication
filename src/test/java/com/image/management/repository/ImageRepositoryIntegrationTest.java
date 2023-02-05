@@ -59,7 +59,7 @@ public class ImageRepositoryIntegrationTest {
     @Test
     public void testMetaDataByObjectsWithNativeQuery(){
         List<String> nameList = List.of("Bicycle","chair");
-        List<Image>  images = imageRepository.findImagesByObjects(nameList);
+        List<Image>  images = imageRepository.findImagesByObjectsList(nameList);
         assertThat(images.size()).isEqualTo(1);
 
 
